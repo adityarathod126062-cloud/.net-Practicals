@@ -1,0 +1,94 @@
+using System;
+
+interface Ipayable
+
+{
+    double CalculateSalary();
+}
+
+abstract class Employee : Ipayable
+
+{
+    public int Id;
+    public string Name;
+
+    public Employee(int id, string name)
+    {
+        Id = id;
+        Name = name;
+    }
+
+    public abstract double CalculateSalary();
+
+    public virtual void Display()
+    {
+        Console.WriteLine("ID: " + Id);
+        Console.WriteLine("Name: " + Name);
+    }
+}
+
+class FullTimeEmployee : Employee
+
+{
+    double Salary;
+
+    public FullTimeEmployee(int id, string name, double salary) : base(id, name)
+    {
+        Salary = salary;
+    }
+
+    public override double CalculateSalary()
+    {
+        return Salary;
+    }
+
+    public override void Display()
+    {
+        base.Display();
+        Console.WriteLine("Type: Full Time");
+        Console.WriteLine("Salary: " + CalculateSalary());
+        Console.WriteLine();
+    }
+}
+
+class PartTimeEmployee : Employee
+{
+    double Salary;
+
+    public PartTimeEmployee(int id, string name, double salary) : base(id, name)
+    {
+        Salary = salary;
+    }
+
+    public override double CalculateSalary()
+    {
+        return Salary;
+    }
+
+    public override void Display()
+    {
+        base.Display();
+        Console.WriteLine("Type: Part Time");
+        Console.WriteLine("Salary: " + CalculateSalary());
+        Console.WriteLine();
+    }
+}
+
+class Program
+
+{
+    static void Main()
+    {
+        Employee e1 = new FullTimeEmployee(232, "Aditya", 30000);
+        Employee e2 = new PartTimeEmployee(500, "Het", 30000);
+        Employee e3 = new FullTimeEmployee(288, "Tejash", 30000);
+
+        Console.WriteLine("Employee Payroll System\n");
+
+        e1.Display();
+        e2.Display();
+        e3.Display();
+
+        Console.ReadKey();
+    }
+}
