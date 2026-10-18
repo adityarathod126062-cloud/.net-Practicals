@@ -1,0 +1,349 @@
+
+<%@ Page Language="C#" AutoEventWireup="true" %>
+
+<script runat="server">
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            pnlLeave.Visible = false;
+            pnlResult.Visible = false;
+            trOtherLeave.Visible = false;
+
+            if (Request.Cookies["EmployeeName"] != null)
+            {
+                txtEmployeeName.Text =
+                    Request.Cookies["EmployeeName"].Value;
+            }
+        }
+    }
+
+    // Apply button: Select leave date
+    protected void btnApply_Click(object sender, EventArgs e)
+    {
+        if (Calendar1.SelectedDate == DateTime.MinValue)
+        {
+            lblSelectedDate.Text = "Please select a leave date.";
+            return;
+        }
+
+        DateTime selectedDate = Calendar1.SelectedDate;
+
+        Session["LeaveDate"] =
+            selectedDate.ToString("dd-MM-yyyy");
+
+        lblSelectedDate.Text =
+            "Selected Date: " + selectedDate.ToString("dd-MM-yyyy");
+
+        lblLeaveDate.Text =
+            selectedDate.ToString("dd-MM-yyyy");
+
+        pnlLeave.Visible = true;
+        pnlResult.Visible = false;
+    }
+
+    // Show or hide the Other Leave Type field
+    protected void ddlLeaveType_SelectedIndexChanged(
+        object sender, EventArgs e)
+    {
+        trOtherLeave.Visible =
+            ddlLeaveType.SelectedValue == "Other";
+    }
+
+    // Submit Leave Application
+    protected void btnSubmit_Click(object sender, EventArgs e)
+    {
+        if (Session["LeaveDate"] == null)
+        {
+            lblMessage.Text = "Please select a leave date first.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(txtEmployeeName.Text))
+        {
+            lblMessage.Text = "Please enter your name.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(ddlLeaveType.SelectedValue))
+        {
+            lblMessage.Text = "Please select a leave type.";
+            return;
+        }
+
+        if (ddlLeaveType.SelectedValue == "Other" &&
+            string.IsNullOrWhiteSpace(txtOtherLeave.Text))
+        {
+            lblMessage.Text = "Please enter the leave type.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(txtReason.Text))
+        {
+            lblMessage.Text = "Please enter the reason.";
+            return;
+        }
+
+        // Remember employee name using a cookie
+        if (chkRememberName.Checked)
+        {
+            HttpCookie cookie = new HttpCookie(
+                "EmployeeName", txtEmployeeName.Text.Trim());
+
+            cookie.Expires = DateTime.Now.AddDays(30);
+            Response.Cookies.Add(cookie);
+        }
+        else
+        {
+            HttpCookie cookie = new HttpCookie("EmployeeName", "");
+            cookie.Expires = DateTime.Now.AddDays(-1);
+            Response.Cookies.Add(cookie);
+        }
+
+        // Get selected leave type
+        string leaveType;
+
+        if (ddlLeaveType.SelectedValue == "Other")
+        {
+            leaveType = txtOtherLeave.Text.Trim();
+        }
+        else
+        {
+            leaveType = ddlLeaveType.SelectedValue;
+        }
+
+        // Display submitted details
+        lblResultName.Text = Server.HtmlEncode(
+            txtEmployeeName.Text.Trim());
+
+        lblResultDate.Text = Server.HtmlEncode(
+            Session["LeaveDate"].ToString());
+
+        lblResultType.Text = Server.HtmlEncode(leaveType);
+
+        lblResultReason.Text = Server.HtmlEncode(
+            txtReason.Text.Trim());
+
+        lblResultStatus.Text = "Submitted";
+
+        lblMessage.Text = "Leave application submitted successfully.";
+
+        pnlResult.Visible = true;
+    }
+
+</script>
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Academic Calendar & Leave Management</title>
+</head>
+
+<body>
+<form id="form1" runat="server">
+
+    <h1>Academic Calendar & Leave Management</h1>
+
+    <h2>Select Leave Date</h2>
+
+    <asp:Calendar
+        ID="Calendar1"
+        runat="server"
+        SelectionMode="Day">
+    </asp:Calendar>
+
+    <br />
+
+    <asp:Label
+        ID="lblSelectedDate"
+        runat="server">
+    </asp:Label>
+
+    <br /><br />
+
+    <asp:Button
+        ID="btnApply"
+        runat="server"
+        Text="Apply"
+        OnClick="btnApply_Click" />
+
+    <br /><br />
+
+    <!-- Leave Application Form -->
+    <asp:Panel
+        ID="pnlLeave"
+        runat="server"
+        Visible="false">
+
+        <h1>Leave Application</h1>
+
+        <table>
+            <tr>
+                <td>Employee Name:</td>
+                <td>
+                    <asp:TextBox
+                        ID="txtEmployeeName"
+                        runat="server">
+                    </asp:TextBox>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Leave Date:</td>
+                <td>
+                    <asp:Label
+                        ID="lblLeaveDate"
+                        runat="server">
+                    </asp:Label>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Leave Type:</td>
+                <td>
+                    <asp:DropDownList
+                        ID="ddlLeaveType"
+                        runat="server"
+                        AutoPostBack="true"
+                        OnSelectedIndexChanged="ddlLeaveType_SelectedIndexChanged">
+
+                        <asp:ListItem
+                            Text="Select Leave Type"
+                            Value="">
+                        </asp:ListItem>
+
+                        <asp:ListItem
+                            Text="Sick Leave"
+                            Value="Sick Leave">
+                        </asp:ListItem>
+
+                        <asp:ListItem
+                            Text="Casual Leave"
+                            Value="Casual Leave">
+                        </asp:ListItem>
+
+                        <asp:ListItem
+                            Text="Emergency Leave"
+                            Value="Emergency Leave">
+                        </asp:ListItem>
+
+                        <asp:ListItem
+                            Text="Other"
+                            Value="Other">
+                        </asp:ListItem>
+
+                    </asp:DropDownList>
+                </td>
+            </tr>
+
+            <!-- Other Leave Type -->
+            <tr id="trOtherLeave" runat="server" visible="false">
+                <td>Enter Leave Type:</td>
+                <td>
+                    <asp:TextBox
+                        ID="txtOtherLeave"
+                        runat="server">
+                    </asp:TextBox>
+                </td>
+            </tr>
+
+            <!-- Reason -->
+            <tr>
+                <td>Reason:</td>
+                <td>
+                    <asp:TextBox
+                        ID="txtReason"
+                        runat="server"
+                        TextMode="MultiLine"
+                        Rows="4"
+                        Columns="30">
+                    </asp:TextBox>
+                </td>
+            </tr>
+
+            <!-- Remember Name -->
+            <tr>
+                <td>Remember Name:</td>
+                <td>
+                    <asp:CheckBox
+                        ID="chkRememberName"
+                        runat="server"
+                        Text="Remember my name" />
+                </td>
+            </tr>
+
+            <!-- Submit -->
+            <tr>
+                <td></td>
+                <td>
+                    <asp:Button
+                        ID="btnSubmit"
+                        runat="server"
+                        Text="Submit Leave"
+                        OnClick="btnSubmit_Click" />
+                </td>
+            </tr>
+        </table>
+
+        <br />
+
+        <asp:Label
+            ID="lblMessage"
+            runat="server">
+        </asp:Label>
+
+    </asp:Panel>
+
+    <br />
+
+    <!-- Submission Details -->
+    <asp:Panel
+        ID="pnlResult"
+        runat="server"
+        Visible="false">
+
+        <h2>Leave Application Details</h2>
+
+        <table>
+            <tr>
+                <td>Name:</td>
+                <td>
+                    <asp:Label ID="lblResultName" runat="server" />
+                </td>
+            </tr>
+
+            <tr>
+                <td>Leave Date:</td>
+                <td>
+                    <asp:Label ID="lblResultDate" runat="server" />
+                </td>
+            </tr>
+
+            <tr>
+                <td>Leave Type:</td>
+                <td>
+                    <asp:Label ID="lblResultType" runat="server" />
+                </td>
+            </tr>
+
+            <tr>
+                <td>Reason:</td>
+                <td>
+                    <asp:Label ID="lblResultReason" runat="server" />
+                </td>
+            </tr>
+
+            <tr>
+                <td>Status:</td>
+                <td>
+                    <asp:Label ID="lblResultStatus" runat="server" />
+                </td>
+            </tr>
+        </table>
+
+    </asp:Panel>
+
+</form>
+</body>
+</html>
